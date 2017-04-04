@@ -1,0 +1,7 @@
+user: admin
+password: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918  # SHA256 hash of the password to use.
+language: fr  # Locale to use for the admin interface. Only en and fr are currently available.
+switches:  # Defines here the switches you want to control.
+  circulator:  # Defines the name of the python module to load in the switches package.
+    name: Circulateur  # Sets the name to be used in the admin interface.
+    levels: 1  # Sets the different levels of intensity available for this switch.
