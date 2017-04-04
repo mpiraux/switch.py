@@ -1,0 +1,24 @@
+{
+  "name": "BoilerPython",
+  "authors": [
+    "Maxime Piraux <maxime.piraux@student.uclouvain.be>"
+  ],
+  "description": "A simple switch automation application",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery-ui": "^1.12.1",
+    "jquery": "^3.2.1",
+    "clockpicker": "^0.0.7",
+    "bootstrap": "^3.3.7"
+  }
+}
