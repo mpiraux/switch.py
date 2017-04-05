@@ -1,2 +1,5 @@
 .idea
 bower_components
+configuration.yaml
+__pycache__
+data
