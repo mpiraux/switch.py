@@ -1,16 +1,16 @@
 from switch.time.time_interval import WeightedTimeInterval, Instant
 
 
-class Planning(object):
+class Schedule(object):
     """
         A class representing a set of non overlapping weighted time interval spanning over a week.
         
         >>> i1 = WeightedTimeInterval(Instant(0, 1, 0), Instant(0, 2, 0), w=1)
         >>> i2 = WeightedTimeInterval(Instant(1, 1, 0), Instant(1, 2, 0), w=2)
-        >>> p = Planning()
+        >>> p = Schedule()
         >>> p.add_interval(i1)
         >>> p.add_interval(i2)
-        >>> repr(p) == repr(Planning(intervals=[i1, i2]))
+        >>> repr(p) == repr(Schedule(intervals=[i1, i2]))
         True
         >>> p.get_weight(Instant(0, 1, 30))
         1
