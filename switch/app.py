@@ -3,9 +3,9 @@ import os
 from flask import Flask, render_template
 from flask_bower import Bower
 
-from boiler import join_root
-from boiler.switch_manager import SwitchManager
-from boiler.utils import ensure_directory_exists, load_config_file
+from switch import join_root
+from switch.switch_manager import SwitchManager
+from switch.utils import ensure_directory_exists, load_config_file
 
 ensure_directory_exists(join_root('data'))
 

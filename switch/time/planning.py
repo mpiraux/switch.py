@@ -1,4 +1,4 @@
-from boiler.time.time_interval import WeightedTimeInterval, Instant
+from switch.time.time_interval import WeightedTimeInterval, Instant
 
 
 class Planning(object):

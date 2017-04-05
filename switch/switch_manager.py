@@ -10,7 +10,7 @@ class SwitchManager(object):
         self._states = {}
         for switch in switch_definitions:
             self._states[switch] = {'level': 0, 'mode': 0}
-            self._modules[switch] = import_module('boiler.switches.%s' % self._switches[switch]['module'])
+            self._modules[switch] = import_module('switch.switches.%s' % self._switches[switch]['module'])
 
     def __iter__(self):
         items = []

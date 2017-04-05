@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% set active_page = 'index' %}
 
-{% block title %}BoilerPi{% endblock %}
+{% block title %}switch.py{% endblock %}
 
 {% macro switch_mode_button(class, tooltip, text) %}
     <button type="button" class="btn btn-lg {{ class }}"
@@ -26,6 +26,11 @@
 {% endmacro %}
 
 {% block content %}
+    <div class="page-header">
+        <h1>Welcome to switch.py
+            <small>A simple switch automation application</small>
+        </h1>
+    </div>
     {% for switch in switch_manager %}
         <div class="panel panel-default">
         <div class="panel-heading">
