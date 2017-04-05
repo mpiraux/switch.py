@@ -1,5 +1,50 @@
 {% extends 'base.html' %}
+{% set active_page = 'index' %}
+
 {% block title %}BoilerPi{% endblock %}
+
+{% macro switch_mode_button(class, tooltip, text) %}
+    <button type="button" class="btn btn-lg {{ class }}"
+            data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}">
+        {{ text }}
+    </button>
+{% endmacro %}
+
+{% macro switch_mode_buttons(class='btn-group hidden-xs') %}
+    <div class="{{ class }}" data-toggle="buttons">
+        {{ switch_mode_button('btn-success', 'Start the automation service for this switch', 'Activate service') }}
+        {{ switch_mode_button('btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON') }}
+        {{ switch_mode_button('btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF') }}
+        {{ switch_mode_button('btn-danger', 'Keep the switch on continuously', '24/7 ON') }}
+        {{ switch_mode_button('btn-danger', 'Keep the switch off continuously', '24/7 OFF') }}
+        <button id="timer-btn" type="button" class="btn btn-lg btn-default" data-html="true"
+                data-toggle="popover" data-placement="top"
+                data-content='TODO'>
+            Timer
+        </button>
+    </div>
+{% endmacro %}
+
 {% block content %}
-    Hello, world!
+    {% for switch in switch_manager %}
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title"><strong>{{ switch['name'] }}</strong></h3>
+        </div>
+        <div id="pump-panel-body" class="panel-body">
+            {{ switch_mode_buttons() }}
+            {{ switch_mode_buttons(class='btn-group-vertical visible-xs') }}
+        </div>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+            $('[data-toggle="popover"]').popover();
+        });
+    </script>
 {% endblock %}
