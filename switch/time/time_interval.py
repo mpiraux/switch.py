@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date, datetime, time
 
 
 class Instant(timedelta):
@@ -15,8 +15,20 @@ class Instant(timedelta):
 
     def __repr__(self):
         return '%s(day=%d, hour=%d, minute=%d)' % (
-            self.__class__.__qualname__, self.days, self.seconds / (60 * 60), (self.seconds / 60) % 60
+            self.__class__.__qualname__, self.days, self.seconds // (60 * 60), (self.seconds // 60) % 60
         )
+
+    def to_datetime(self):
+        today = date.today()
+        week_start = datetime.combine(today - timedelta(days=today.weekday()), time())
+        return week_start + self
+
+    @classmethod
+    def now_to_instant(cls):
+        today = date.today()
+        week_start = datetime.combine(today - timedelta(days=today.weekday()), time())
+        delta = datetime.now() - week_start
+        return cls(day=delta.days, hour=delta.seconds // (60 * 60), minute=(delta.seconds // 60) % 60), delta
 
 
 class RelativeTimeInterval(object):

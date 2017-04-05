@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from switch.time.time_interval import WeightedTimeInterval, Instant
 
 
@@ -41,6 +43,44 @@ class Schedule(object):
             if i in interval:
                 return interval.weight
         return None
+
+    def get_current_action(self):
+        """
+            Returns a tuple (weight, datetime) where weight can be None (indicating the end of the previous action)
+            representing the current action of the schedule. If the schedule is empty returns None.
+        """
+        if not self._intervals:
+            return None
+
+        now = Instant.now_to_instant()
+        for idx, interval in enumerate(self._intervals):
+            if now in interval:
+                return interval.weight, interval.a.to_datetime()
+            if now < interval:
+                previous_idx = (idx - 1) % len(self._intervals)
+                previous_instant = self._intervals[previous_idx].b.to_datetime()
+                if previous_idx > idx:
+                    previous_instant -= timedelta(weeks=1)
+                return interval.weight, previous_instant
+
+    def get_next_action(self):
+        """
+            Returns a tuple (weight, datetime) where weight can be None (indicating the end of the current action)
+            representing the next action of the schedule. If the schedule is empty returns None.
+        """
+        if not self._intervals:
+            return None
+
+        now = Instant.now_to_instant()
+        for idx, interval in enumerate(self._intervals):
+            if now in interval and interval.b < self._intervals[(idx + 1) % len(self._intervals)].a:
+                # There is a gap between the current interval and the next one.
+                return None, interval.b.to_datetime()
+            if now < interval:
+                return interval.weight, interval.a.to_datetime()
+        # No interval was found, going back to the start and add one week.
+        interval = self._intervals[0]
+        return interval.weight, interval.a.to_datetime() + timedelta(weeks=1)
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))
