@@ -4,14 +4,14 @@ from datetime import timedelta, date, datetime, time
 class Instant(timedelta):
     """ 
         A class representing an instant in a week with minute precision.  
-        Days, hours and minutes are automatically clamped for better interpretability of the results.
+        Days are automatically clamped for better interpretability of the results.
         
         >>> Instant(day=8, hour=2, minute=1)
         Instant(day=1, hour=2, minute=1)
     """
 
     def __new__(cls, day=0, hour=0, minute=0):
-        return super().__new__(cls, days=day % 7, hours=hour % 24, minutes=minute % 60)
+        return super().__new__(cls, days=day % 8, hours=hour, minutes=minute)
 
     def __repr__(self):
         return '%s(day=%d, hour=%d, minute=%d)' % (
@@ -23,12 +23,19 @@ class Instant(timedelta):
         week_start = datetime.combine(today - timedelta(days=today.weekday()), time())
         return week_start + self
 
+    def to_dict(self):
+        return {'day': self.days, 'hour': self.seconds // (60 * 60), 'minute': (self.seconds // 60) % 60}
+
     @classmethod
     def now_to_instant(cls):
         today = date.today()
         week_start = datetime.combine(today - timedelta(days=today.weekday()), time())
         delta = datetime.now() - week_start
-        return cls(day=delta.days, hour=delta.seconds // (60 * 60), minute=(delta.seconds // 60) % 60), delta
+        return cls(day=delta.days, hour=delta.seconds // (60 * 60), minute=(delta.seconds // 60) % 60)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
 
 
 class RelativeTimeInterval(object):
@@ -87,7 +94,10 @@ class RelativeTimeInterval(object):
 
 
 class WeightedTimeInterval(RelativeTimeInterval):
-    """ A class representing a relative time interval in a week associated with an integer weight. """
+    """
+        A class representing a relative time interval in a week associated with an integer weight.
+        Also adds dict dumping and loading.
+    """
 
     def __init__(self, a: Instant, b: Instant, w: int = 0):
         super().__init__(a, b)
@@ -95,3 +105,11 @@ class WeightedTimeInterval(RelativeTimeInterval):
 
     def __repr__(self):
         return '%s(a=%s, b=%s, w=%d)' % (self.__class__.__qualname__, repr(self.a), repr(self.b), self.weight)
+
+    def to_dict(self):
+        return {'a': self.a.to_dict(), 'b': self.b.to_dict(), 'w': self.weight}
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(a=Instant.from_dict(d['a']), b=Instant.from_dict(d['b']), w=d['w'])
+

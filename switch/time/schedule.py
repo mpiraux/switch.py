@@ -21,18 +21,30 @@ class Schedule(object):
     """
 
     def __init__(self, intervals=None):
-        if intervals is None:
-            intervals = []
-        self._intervals = intervals
+        self._intervals = []
+        for i in intervals:
+            self.add_interval(i)
 
     def add_interval(self, new_interval: WeightedTimeInterval):
-        """ Adds the interval if it is not overlapping with any other interval, otherwise does nothing. """
+        """
+            Adds the interval if it is not overlapping with any other interval.
+            If both overlapping intervals have the same weight they will be merged into one.
+        """
         for idx, interval in enumerate(self._intervals):
             if new_interval < interval:
                 self._intervals.insert(idx, new_interval)
             elif new_interval in interval:
                 return
+            elif not new_interval > interval and new_interval.weight == interval.weight:
+                # They are overlapping because one is not included in the other, nor strictly before or after.
+                self._intervals[idx] = WeightedTimeInterval(min(new_interval.a, interval.a),
+                                                            max(new_interval.b, interval.b),
+                                                            interval.weight)
+                return
         self._intervals.append(new_interval)
+
+    def empty(self):
+        self._intervals = []
 
     def get_weight(self, i: Instant):
         """
@@ -84,3 +96,25 @@ class Schedule(object):
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))
+
+    def to_dict(self):
+        return {'intervals': [interval.to_dict() for interval in self._intervals]}
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls([WeightedTimeInterval.from_dict(i) for i in d['intervals']])
+
+    def to_interface_list(self):
+        arrays = [[] for _ in range(7)]
+        for interval in self._intervals:
+            if interval.a.days == interval.b.days:
+                arrays[interval.a.days].append([interval.a.seconds // (60*15), interval.b.seconds // (60*15)])
+            else:
+                arrays[interval.a.days].append([interval.a.seconds // (60 * 15), 96])
+                for day in range(interval.a.days+1, min(interval.b.days+1, 7)):
+                    if day == interval.b.days:
+                        if interval.b.seconds > 0:
+                            arrays[day].append([0, interval.b.seconds // (60*15)])
+                    else:
+                        arrays[day].append([0, 96])
+        return arrays

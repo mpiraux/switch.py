@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% set active_page = 'config' %}
+
+{% block title %}Configure {{ switch.name }} - switch.py{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .slider {
+            padding-top: 20px;
+        }
+
+        .slider-range {
+            margin-bottom: 44px;
+        }
+
+        .slider-header {
+            float: right;
+            color: #000099;
+        }
+    </style>
+{% endblock %}
+
+{% macro day_panel(name, id) %}
+    <h3>{{ name }}: <span id="slider-{{ id }}-header" class="slider-header"></span></h3>
+    <div id="slider-{{ id }}" class="slider-day">
+        <div id="slider-{{ id }}-range0" class="slider-range">
+            <div class="slider">
+                <label for="slider-{{ id }}-range0-data">Time slot:</label>
+                <input type="text" id="slider-{{ id }}-range0-data" style="border:0; color:#996633;" readonly>
+                <button type="button" id="slider-{{ id }}-range0-destroy" class="btn btn-xs btn-danger pull-right"><span
+                        class="glyphicon glyphicon-trash"></span></button>
+            </div>
+        </div>
+        <button type="button" id="slider-{{ id }}-create" class="btn btn-default"><span
+                class="glyphicon glyphicon-plus"></span></button>
+    </div>
+{% endmacro %}
+
+{% block content %}
+    <div class="page-header">
+        <h1>Configure <i>{{ switch.name }}</i></h1>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <label for="sched-list" style="margin-right: 5px; display: inline-block">Load</label>
+            <select id="sched-list" class="form-control" style="width: auto; display: inline-block;">
+                <option {{ 'selected' if schedule is none }}>Empty schedule</option>
+                {% for s in switch.schedules %}
+                    <option value="{{ s }}" {{ 'selected' if s == schedule_name }}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+
+    <div id="configuration-accordion" style="margin-bottom: 20px;">
+        {{ day_panel('Monday', 'mon') }}
+        {{ day_panel('Tuesday', 'tue') }}
+        {{ day_panel('Wednesday', 'wed') }}
+        {{ day_panel('Thursday', 'thu') }}
+        {{ day_panel('Friday', 'fri') }}
+        {{ day_panel('Saturday', 'sat') }}
+        {{ day_panel('Sunday', 'sun') }}
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <form action="{{ url_for('configure_switch', switch=switch.id) }}" method="post">
+                        <input type="hidden" name="intervals">
+                        <div style="display: inline-block; vertical-align: middle;">
+                            <label style="display: inline-block">Schedule name</label>
+                            <input type="text" placeholder="Schedule name" style="display: inline-block" name="name" required>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            Create
+                        </button>
+                    </form>
+                </div>
+                {% if schedule is not none %}
+                <div><i>or</i></div>
+                <div>
+                    <form action="{{ url_for('configure_switch', switch=switch.id) }}" method="post">
+                        <input type="hidden" name="intervals">
+                        <div style="display: inline-block; vertical-align: middle;">
+                            <label for="post-sched-list">Replace</label>
+                            <select id="post-sched-list" class="form-control" style="width: auto; display: inline-block;" name="replace-sched">
+                                {% for s in switch.schedules %}
+                                    <option value="{{ s }}" {{ 'selected' if s == schedule_name }}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="display: inline-block; vertical-align: middle;">
+                            <label style="display: inline-block">by</label>
+                            <input type="text" placeholder="Schedule name" style="display: inline-block" name="new-sched-name"
+                                   value="{{ schedule_name }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg" style="display: inline-block;">
+                            Update
+                        </button>
+                    </form>
+                </div>
+                <div><i>or</i></div>
+                <div>
+                    <button type="button" class="btn btn-lg btn-danger" data-toggle="modal" data-target=".modal">
+                        Delete
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Confirm deletion</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Please confirm to effectively delete schedule <strong>{{ schedule_name }}</strong>. This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <form action="{{ url_for('delete_switch_schedule', switch=switch.id, schedule=schedule_name) }}"
+                          method="post" style="display: inline-block;">
+                        <button type="submit" class="btn btn-danger">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(window).ready(function () {
+            for (var i = 0; i < 7; i++) {
+                create_create_button(get_day(i));
+                create_slider(get_day(i), 0);
+            }
+            $("#configuration-accordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                beforeActivate: function (event, ui) {
+                    if (ui.newHeader[0]) {
+                        var currHeader = ui.newHeader;
+                        var currContent = currHeader.next('.ui-accordion-content');
+                    } else {
+                        var currHeader = ui.oldHeader;
+                        var currContent = currHeader.next('.ui-accordion-content');
+                    }
+                    var isPanelSelected = currHeader.attr('aria-selected') == 'true';
+                    currHeader.toggleClass('ui-corner-all', isPanelSelected).toggleClass('accordion-header-active ui-state-active ui-corner-top', !isPanelSelected).attr('aria-selected', ((!isPanelSelected).toString()));
+                    currHeader.children('.ui-icon').toggleClass('ui-icon-triangle-1-e', isPanelSelected).toggleClass('ui-icon-triangle-1-s', !isPanelSelected);
+                    currContent.toggleClass('accordion-content-active', !isPanelSelected);
+                    if (isPanelSelected) {
+                        currContent.slideUp();
+                    } else {
+                        currContent.slideDown();
+                    }
+                    return false;
+                }
+            });
+            $('form').submit(function() {
+                var arrays = [];
+                for (var i = 0; i < 7; i++) {
+                    var slider = get_first_slider(i);
+                    if(slider.hasClass('slider-range')) {
+                        arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96]);
+                        while (slider.next(".slider-range").length !== 0) {
+                            slider = slider.next();
+                            arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96]);
+                        }
+                    }
+                }
+                $('input[type="hidden"]').val(JSON.stringify(arrays));
+            });
+            $('#sched-list').change(function() {
+                if(this.selectedOptions[0].hasAttribute('value')) {
+                    window.location = '{{ url_for('configure_switch', switch=switch.id) }}' + '/' + this.selectedOptions[0].getAttribute('value');
+                } else {
+                    window.location = '{{ url_for('configure_switch', switch=switch.id) }}';
+                }
+            });
+            {% if schedule is not none %}
+                var schedule_data = {{ schedule.to_interface_list()|tojson }};
+                for (i = 0; i < 7; i++) {
+                    var slider = $("#slider-" + get_day(i) + "-range0");
+                    if(schedule_data[i].length === 0) {
+                        slider.find('button').click();
+                    } else {
+                        slider.slider("values", 0, schedule_data[i][0][0]);
+                        slider.slider("values", 1, schedule_data[i][0][1]);
+                        for (var j = 1; j < schedule_data[i].length; j++) {
+                            $("#slider-" + get_day(i) + "-create").click();
+                            slider = $("#slider-" + get_day(i) + "-range" + j);
+                            slider.slider("values", 0, schedule_data[i][j][0]);
+                            slider.slider("values", 1, schedule_data[i][j][1]);
+                        }
+                    }
+                }
+            {% endif %}
+        });
+
+        function create_slider(day, index) {
+            var slider_id = "#slider-" + day + "-range" + index;
+            var slider = $(slider_id);
+            slider.data("id", index);
+            slider.slider({
+                range: true,
+                min: 0,
+                max: 96,
+                values: [0, 96],
+                slide: function (event, ui) {
+                    var slider = $(slider_id);
+                    if (ui.values[0] !== ui.values[1] || (ui.values[0] !== ui.value && ui.values[1] !== ui.value)) {
+                        update_slider(day, index);
+                        if (slider.next(".slider-range").length !== 0) {
+                            var val1 = ui.values[1];
+                            if (slider.next().slider("values", 1) !== (val1 + 1)) {
+                                var next_val = slider.next().slider("values", 0);
+                                if (val1 >= slider.next().slider("values", 1)) {
+                                    return false;
+                                }
+                                if (val1 >= next_val) {
+                                    slider.next().slider("values", [val1 + 1, slider.next().slider("values", 1)]);
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+                        if (slider.prev(".slider-range").length !== 0) {
+                            var val0 = ui.values[0];
+                            if (slider.prev(".slider-range").slider("values", 0) !== (val0 - 1)) {
+                                var prev_val = slider.prev().slider("values", 1);
+                                if (val0 <= slider.prev().slider("values", 0)) {
+                                    return false;
+                                }
+                                if (val0 <= prev_val) {
+                                    slider.prev().slider("values", [slider.prev().slider("values", 0), val0 - 1]);
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                },
+                change: function (event, ui) {
+                    if (ui.values[0] !== ui.values[1] && ui.values[0] < ui.values[1]) {
+                        update_slider(day, index);
+                    } else {
+                        $(slider_id).remove();
+                    }
+                    update_slider_header(day);
+                }
+            });
+            if (slider.prev(".slider-range").length !== 0) {
+                if (slider.prev(".slider-range").slider("values", 1) === 96) {
+                    slider.prev(".slider-range").slider("values", [slider.prev(".slider-range").slider("values", 0), slider.prev(".slider-range").slider("values", 1) - 3]);
+                }
+                slider.slider("values", [(slider.prev(".slider-range").slider("values", 1) + 1), 96]);
+            }
+            update_slider(day, index);
+            $(slider_id + "-destroy").click(function () {
+                if ($("#slider-" + day).children().length > 1) {
+                    slider.remove();
+                    update_slider_header(day);
+                }
+            });
+            update_slider_header(day);
+        }
+        function create_create_button(day) {
+            $("#slider-" + day).data("last_id", 0);
+            $("#slider-" + day + "-create").click(function () {
+                var index = $("#slider-" + day).data("last_id") + 1;
+                var id = "slider-" + day + "-range" + index;
+                $("#slider-" + day + "-create").before("<div id=" + id + " class=\"slider-range\"></div>");
+                $("#" + id).append("<div class=\"slider\"> <label for=\"" + id + "-data\"> Time slot:</label> <input type=\"text\" id=\"" + id + "-data\" style=\"border:0; color:#996633;\" readonly> <button type=\"button\" id=\"" + id + "-destroy\" class=\"btn btn-xs btn-danger pull-right\"><span class=\"glyphicon glyphicon-trash\"></button>  </div>");
+                create_slider(day, index);
+                $("#slider-" + day).data("last_id", index);
+            });
+        }
+        function update_slider(day, index) {
+            var slider_id = "#slider-" + day + "-range" + index;
+            var slider = $(slider_id);
+            var h1 = Math.floor(slider.slider("values", 0) / 4);
+            var q1 = (slider.slider("values", 0) % 4) * 15;
+            var h2 = Math.floor(slider.slider("values", 1) / 4);
+            var q2 = (slider.slider("values", 1) % 4) * 15;
+            $(slider_id + "-data").val(h1 + ":" + (q1 === 0 ? "00" : q1) + " to " + h2 + ":" + (q2 === 0 ? "00" : q2));
+        }
+        function update_slider_header(day) {
+            var string = "";
+            $("#slider-" + day).children().each(function () {
+                var id = $(this).data("id");
+                if (typeof $("#slider-" + day + "-range" + id + "-data").val() !== "undefined") {
+                    string += $("#slider-" + day + "-range" + id + "-data").val() + " - ";
+                }
+            });
+            $("#slider-" + day + "-header").text(string === "" ? "No data" : string);
+        }
+        function get_first_slider(i) {
+            return $('.slider-day').eq(i).children().first();
+        }
+        function get_day(i) {
+            return {0: "mon", 1: "tue", 2: "wed", 3: "thu", 4: "fri", 5: "sat", 6: "sun"}[i];
+        }
+    </script>
+{% endblock %}

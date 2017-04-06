@@ -3,23 +3,23 @@
 
 {% block title %}switch.py{% endblock %}
 
-{% macro switch_mode_button(class, tooltip, text) %}
+{% macro switch_mode_button(class, tooltip, text, disabled=False) %}
     <button type="button" class="btn btn-lg {{ class }}"
-            data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}">
+            data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}" {{ 'disabled' if disabled }}>
         {{ text }}
     </button>
 {% endmacro %}
 
-{% macro switch_mode_buttons(class='btn-group hidden-xs') %}
+{% macro switch_mode_buttons(switch, class) %}
     <div class="{{ class }}" data-toggle="buttons">
-        {{ switch_mode_button('btn-success', 'Start the automation service for this switch', 'Activate service') }}
-        {{ switch_mode_button('btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON') }}
-        {{ switch_mode_button('btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF') }}
-        {{ switch_mode_button('btn-danger', 'Keep the switch on continuously', '24/7 ON') }}
-        {{ switch_mode_button('btn-danger', 'Keep the switch off continuously', '24/7 OFF') }}
+        {{ switch_mode_button('btn-success', 'Start the automation service for this switch', 'Activate service', switch.mode==0) }}
+        {{ switch_mode_button('btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON', switch.mode==1) }}
+        {{ switch_mode_button('btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF', switch.mode==2) }}
+        {{ switch_mode_button('btn-danger', 'Keep the switch on continuously', '24/7 ON', switch.mode==3) }}
+        {{ switch_mode_button('btn-danger', 'Keep the switch off continuously', '24/7 OFF', switch.mode==4) }}
         <button id="timer-btn" type="button" class="btn btn-lg btn-default" data-html="true"
                 data-toggle="popover" data-placement="top"
-                data-content='TODO'>
+                data-content='TODO' {{ 'disabled' if switch.mode==5 }}>
             Timer
         </button>
     </div>
@@ -34,11 +34,22 @@
     {% for switch in switch_manager %}
         <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title"><strong>{{ switch['name'] }}</strong></h3>
+            <a class="btn btn-xs btn-primary pull-right" href="{{ url_for('configure_switch', switch=switch.id) }}">
+                <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
+            </a>
+            <span class="panel-title"><strong>{{ switch['name'] }}</strong></span>
         </div>
         <div id="pump-panel-body" class="panel-body">
-            {{ switch_mode_buttons() }}
-            {{ switch_mode_buttons(class='btn-group-vertical visible-xs') }}
+            {{ switch_mode_buttons(switch, class='btn-group hidden-xs') }}
+            {{ switch_mode_buttons(switch, class='btn-group-vertical visible-xs') }}
+            <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 4px;">
+                {% for schedule in switch.schedules %}
+                    <label class="btn btn-lg btn-primary">
+                        <input type="radio" {{ 'checked' if switch.active_schedule }}>
+                        <span>{{ schedule }}</span>
+                    </label>
+                {% endfor %}
+            </div>
         </div>
     </div>
     {% endfor %}
