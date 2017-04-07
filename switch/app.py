@@ -36,29 +36,25 @@ def configure_switch(switch):
     if request.method == 'GET':
         return render_template('configuration.html', switch=app.switch_manager[switch], schedule=None)
     elif request.method == 'POST':
-        try:
-            schedules = app.switch_manager[switch]['schedules']
+        schedules = app.switch_manager[switch]['schedules']
 
-            if 'replace-sched' in request.form and 'new-sched-name' in request.form:
-                new_schedule_name = request.form['new-sched-name']
-                schedules.pop(request.form['replace-sched'], None)
-            else:
-                new_schedule_name = request.form['name']
+        if 'replace-sched' in request.form and 'new-sched-name' in request.form:
+            schedule_name = request.form['new-sched-name']
+            app.switch_manager.delete_schedule(switch, request.form['replace-sched'])
+        else:
+            schedule_name = request.form['name']
 
-            new_schedule_intervals = json.loads(request.form['intervals'])
-            if new_schedule_name in schedules:
-                flash('schedule_already_exists')
-                return redirect(url_for('configure_switch', switch=switch))
+        schedule_intervals = json.loads(request.form['intervals'])
+        if schedule_name in schedules:
+            flash('schedule_already_exists')
+            return redirect(url_for('configure_switch', switch=switch))
 
-            intervals = []
-            for a, b in new_schedule_intervals:
-                intervals.append(WeightedTimeInterval(Instant(minute=15*a), Instant(minute=15*b), w=1))
-            schedules[new_schedule_name] = Schedule(intervals)
-            app.switch_manager.save_schedules(switch)
-            flash('schedule_created')
-            return redirect(url_for('index'))
-        except KeyError as e:
-            print(e)
+        intervals = []
+        for a, b in schedule_intervals:
+            intervals.append(WeightedTimeInterval(Instant(minute=15 * a), Instant(minute=15 * b), w=1))
+        app.switch_manager.add_schedule(switch, schedule_name, Schedule(intervals))
+        flash('schedule_created')
+        return redirect(url_for('index'))
 
 
 @app.route('/configuration/<switch>/<schedule>')

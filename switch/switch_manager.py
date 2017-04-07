@@ -32,6 +32,14 @@ class SwitchManager(object):
         with open(schedules_path, 'w') as f:
             json.dump({schedule_name: schedule.to_dict() for schedule_name, schedule in self._schedules[switch_id].items()}, f)
 
+    def add_schedule(self, switch, schedule_name, schedule):
+        self._schedules[switch][schedule_name] = schedule
+        self.save_schedules(switch)
+
+    def delete_schedule(self, switch, schedule_name):
+        self._schedules[switch].pop(schedule_name)
+        self.save_schedules(switch)
+
     def __iter__(self):
         items = []
         for switch_id in self._switches:
