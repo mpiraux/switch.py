@@ -75,5 +75,10 @@ def delete_switch_schedule(switch, schedule):
     return redirect(url_for('index'))
 
 
+@app.route('/switch/<switch>/use/<schedule>', methods=['POST'])
+def use_switch_schedule(switch, schedule):
+    print('use_switch_schedule', switch, schedule)
+
+
 if __name__ == '__main__':
     app.run()

@@ -37,22 +37,69 @@
             <a class="btn btn-xs btn-primary pull-right" href="{{ url_for('configure_switch', switch=switch.id) }}">
                 <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
             </a>
-            <span class="panel-title"><strong>{{ switch['name'] }}</strong></span>
+            <span class="panel-title"><strong>{{ switch.name }}</strong></span>
         </div>
         <div id="pump-panel-body" class="panel-body">
             {{ switch_mode_buttons(switch, class='btn-group hidden-xs') }}
             {{ switch_mode_buttons(switch, class='btn-group-vertical visible-xs') }}
-            <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 4px;">
-                {% for schedule in switch.schedules %}
-                    <label class="btn btn-lg btn-primary">
-                        <input type="radio" {{ 'checked' if switch.active_schedule }}>
-                        <span>{{ schedule }}</span>
-                    </label>
-                {% endfor %}
-            </div>
+
+            {% if switch.schedules %}
+                <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 15px;">
+                    {% for schedule in switch.schedules %}
+                        <label class="btn btn-lg btn-primary"
+                               onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule) }}');">
+                            <input type="radio" {{ 'checked' if switch.active_schedule == schedule }}>
+                            <span>{{ schedule }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert" style="margin-top: 15px; margin-bottom: 0;">
+                    No schedule exist for this switch.
+                    <a class="btn btn-xs btn-primary" href="{{ url_for('configure_switch', switch=switch.id) }}"
+                       style="margin-bottom: 3px;">
+                        <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
+                    </a> it to add a schedule. Of course, you can still use the manual functions above.
+                </div>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
+    <div class="modal fade" id="sched-modal" tabindex="-1" role="dialog" aria-labelledby="sched-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="sched-modal-label">Use schedule <strong><i id="sched-name"></i></strong> for switch <strong><i id="switch-name"></i></strong></h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Time slot(s)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Monday</td><td></td></tr>
+                            <tr><td>Tuesday</td><td></td></tr>
+                            <tr><td>Wednesday</td><td></td></tr>
+                            <tr><td>Thursday</td><td></td></tr>
+                            <tr><td>Friday</td><td></td></tr>
+                            <tr><td>Saturday</td><td></td></tr>
+                            <tr><td>Sunday</td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <form action="" method="post" style="display: inline-block;">
+                        <button type="submit" class="btn btn-primary">Use</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
@@ -62,5 +109,34 @@
             $('[data-toggle="tooltip"]').tooltip();
             $('[data-toggle="popover"]').popover();
         });
+
+        function show_schedule_modal(switch_name, schedule_name, schedule_data, schedule_link) {
+            $('#switch-name').html(switch_name);
+            $('#sched-name').html(schedule_name);
+            var modal = $('#sched-modal');
+            modal.find('form').attr('action', schedule_link);
+            var table_cells = modal.find('table tbody tr');
+            for(var i in schedule_data) {
+                var time_slots_string = get_day_time_slots_string(schedule_data[i]);
+                table_cells.eq(i).children().eq(1).html(time_slots_string ? time_slots_string : 'No time slots');
+            }
+            modal.modal('show');
+            console.log(switch_name, schedule_name, schedule_data, schedule_link)
+        }
+
+        function get_day_time_slots_string(day_intervals) {
+            var string = '';
+            for (var i = 0; i < day_intervals.length; i++) {
+                if (i > 0) {
+                    string += " - ";
+                }
+                var minutes_a = Math.floor((day_intervals[i][0] % 4) * 15);
+                var minutes_b = Math.floor((day_intervals[i][1] % 4) * 15);
+                string += Math.floor(day_intervals[i][0] / 4) + ":" + (minutes_a === 0 ? "00" : minutes_a);
+                string += " to ";
+                string += Math.floor(day_intervals[i][1] / 4) + ":" + (minutes_b === 0 ? "00" : minutes_b);
+            }
+            return string;
+        }
     </script>
 {% endblock %}
