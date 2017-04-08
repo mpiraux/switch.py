@@ -1,25 +1,39 @@
 {% extends 'base.html' %}
 {% set active_page = 'index' %}
 
+{% block styles %}
+    {{ super() }}
+    <style>
+        .btn.btn-lg {
+            border-width: 2px;
+        }
+    </style>
+{% endblock %}
+
 {% block title %}switch.py{% endblock %}
 
-{% macro switch_mode_button(class, tooltip, text, disabled=False) %}
-    <button type="button" class="btn btn-lg {{ class }}"
+{% macro switch_mode_button(switch, class, tooltip, text, mode, disabled=False, no_levels=True) %}
+    {% set focus = switch.mode == mode %}
+    {% set disabled = focus and disabled %}
+    {% set form_id = '%s_%d' % (switch.id, mode) %}
+    <button type="button" class="btn btn-lg {{ class }} {{ 'focus' if focus }}" {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels }}
             data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}" {{ 'disabled' if disabled }}>
         {{ text }}
     </button>
+    {% if no_levels %}
+        <form id="{{ form_id }}" action="{{ url_for('switch_mode', switch=switch.id, mode=mode) }}" method="post" style="display: none"></form>
+    {% endif %}
 {% endmacro %}
 
 {% macro switch_mode_buttons(switch, class) %}
     <div class="{{ class }}" data-toggle="buttons">
-        {{ switch_mode_button('btn-success', 'Start the automation service for this switch', 'Activate service', switch.mode==0) }}
-        {{ switch_mode_button('btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON', switch.mode==1) }}
-        {{ switch_mode_button('btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF', switch.mode==2) }}
-        {{ switch_mode_button('btn-danger', 'Keep the switch on continuously', '24/7 ON', switch.mode==3) }}
-        {{ switch_mode_button('btn-danger', 'Keep the switch off continuously', '24/7 OFF', switch.mode==4) }}
-        <button id="timer-btn" type="button" class="btn btn-lg btn-default" data-html="true"
-                data-toggle="popover" data-placement="top"
-                data-content='TODO' {{ 'disabled' if switch.mode==5 }}>
+        {{ switch_mode_button(switch, 'btn-success', 'Start the automation service for this switch', 'Activate service', 0, disabled=True) }}
+        {{ switch_mode_button(switch, 'btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON', 1) }}
+        {{ switch_mode_button(switch, 'btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF', 2) }}
+        {{ switch_mode_button(switch, 'btn-danger', 'Keep the switch on continuously', '24/7 ON', 3) }}
+        {{ switch_mode_button(switch, 'btn-danger', 'Keep the switch off continuously', '24/7 OFF', 4) }}
+        <button id="timer-btn" type="button" class="btn btn-lg btn-default {{ 'focus' if switch.mode==5 }}" data-html="true"
+                data-toggle="popover" data-placement="top" data-content='TODO'>
             Timer
         </button>
     </div>
@@ -46,18 +60,16 @@
             {% if switch.schedules %}
                 <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 15px;">
                     {% for schedule in switch.schedules %}
-                        <label class="btn btn-lg btn-primary"
-                               onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule) }}');">
-                            <input type="radio" {{ 'checked' if switch.active_schedule == schedule }}>
+                        <label class="btn btn-lg btn-primary {{ 'active' if switch.active_schedule == schedule }}"
+                               onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule|urlencode) }}');">
                             <span>{{ schedule }}</span>
                         </label>
                     {% endfor %}
                 </div>
             {% else %}
                 <div class="alert alert-info" role="alert" style="margin-top: 15px; margin-bottom: 0;">
-                    No schedule exist for this switch.
-                    <a class="btn btn-xs btn-primary" href="{{ url_for('configure_switch', switch=switch.id) }}"
-                       style="margin-bottom: 3px;">
+                    There is no schedule for this switch.
+                    <a class="btn btn-xs btn-primary" href="{{ url_for('configure_switch', switch=switch.id) }}">
                         <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
                     </a> it to add a schedule. Of course, you can still use the manual functions above.
                 </div>
@@ -70,7 +82,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="sched-modal-label">Use schedule <strong><i id="sched-name"></i></strong> for switch <strong><i id="switch-name"></i></strong></h4>
+                    <h4 class="modal-title" id="sched-modal-label">Use schedule <strong id="sched-name"></strong> for switch <strong id="switch-name"></strong></h4>
                 </div>
                 <div class="modal-body">
                     <table class="table table-striped">

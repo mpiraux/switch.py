@@ -40,11 +40,16 @@ class SwitchManager(object):
         self._schedules[switch].pop(schedule_name)
         self.save_schedules(switch)
 
+    def use_schedule(self, switch, schedule_name):
+        if schedule_name in self._schedules[switch]:
+            self._states[switch]['active_schedule'] = schedule_name
+
+    def switch_mode(self, switch, mode, level):
+        self._states[switch]['mode'] = mode
+        self._states[switch]['level'] = level
+
     def __iter__(self):
-        items = []
-        for switch_id in self._switches:
-            items.append(self[switch_id])
-        return iter(items)
+        return iter([self[switch_id] for switch_id in self._switches])
 
     def __getitem__(self, switch_id):
         attrs = self._switches[switch_id]

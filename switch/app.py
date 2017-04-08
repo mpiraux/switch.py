@@ -77,7 +77,17 @@ def delete_switch_schedule(switch, schedule):
 
 @app.route('/switch/<switch>/use/<schedule>', methods=['POST'])
 def use_switch_schedule(switch, schedule):
-    print('use_switch_schedule', switch, schedule)
+    app.switch_manager.use_schedule(switch, schedule)
+    flash('schedule_used')
+    return redirect(url_for('index'))
+
+
+@app.route('/switch/<switch>/mode/<int:mode>', methods=['POST'])
+@app.route('/switch/<switch>/mode/<int:mode>/level/<int:level>', methods=['POST'])
+def switch_mode(switch, mode, level=1):
+    app.switch_manager.switch_mode(switch, mode, level=level)
+    flash('mode_switched')
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
