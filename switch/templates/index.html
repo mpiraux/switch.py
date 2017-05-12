@@ -61,7 +61,7 @@
                 <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 15px;">
                     {% for schedule in switch.schedules %}
                         <label class="btn btn-lg btn-primary {{ 'active' if switch.active_schedule == schedule }}"
-                               onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule|urlencode) }}');">
+                               onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.levels }}, {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule|urlencode) }}');">
                             <span>{{ schedule }}</span>
                         </label>
                     {% endfor %}
@@ -122,21 +122,21 @@
             $('[data-toggle="popover"]').popover();
         });
 
-        function show_schedule_modal(switch_name, schedule_name, schedule_data, schedule_link) {
+        function show_schedule_modal(switch_name, schedule_name, switch_levels, schedule_data, schedule_link) {
             $('#switch-name').html(switch_name);
             $('#sched-name').html(schedule_name);
             var modal = $('#sched-modal');
             modal.find('form').attr('action', schedule_link);
             var table_cells = modal.find('table tbody tr');
             for(var i in schedule_data) {
-                var time_slots_string = get_day_time_slots_string(schedule_data[i]);
+                var time_slots_string = get_day_time_slots_string(schedule_data[i], switch_levels > 1);
                 table_cells.eq(i).children().eq(1).html(time_slots_string ? time_slots_string : 'No time slots');
             }
             modal.modal('show');
             console.log(switch_name, schedule_name, schedule_data, schedule_link)
         }
 
-        function get_day_time_slots_string(day_intervals) {
+        function get_day_time_slots_string(day_intervals, display_levels) {
             var string = '';
             for (var i = 0; i < day_intervals.length; i++) {
                 if (i > 0) {
@@ -147,6 +147,9 @@
                 string += Math.floor(day_intervals[i][0] / 4) + ":" + (minutes_a === 0 ? "00" : minutes_a);
                 string += " to ";
                 string += Math.floor(day_intervals[i][1] / 4) + ":" + (minutes_b === 0 ? "00" : minutes_b);
+                if(display_levels) {
+                    string += " (L" + day_intervals[i][2] + ")";
+                }
             }
             return string;
         }
