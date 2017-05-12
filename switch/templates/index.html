@@ -21,12 +21,12 @@
     {% set disabled = focus and disabled_when_focus %}
     {% set form_id = '%s_%d' % (switch.id, mode) %}
     <button type="button" class="btn btn-lg {{ class }} {{ 'active focus' if focus }}"
-            {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels
+            {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels or mode % 2 == 0
             else ('onclick="update_form(\'%s\', \'%s\')"' % (switch.id, url_for('switch_mode', switch=switch.id, mode=mode)))|safe }}
             data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}" {{ 'disabled' if disabled }}>
         {{ text }}
     </button>
-    {% if no_levels %}
+    {% if no_levels or mode % 2 == 0 %}
         <form id="{{ form_id }}" action="{{ url_for('switch_mode', switch=switch.id, mode=mode) }}" method="post" style="display: none"></form>
     {% endif %}
 {% endmacro %}
