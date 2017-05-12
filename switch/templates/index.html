@@ -12,9 +12,9 @@
 
 {% block title %}switch.py{% endblock %}
 
-{% macro switch_mode_button(switch, class, tooltip, text, mode, disabled=False, no_levels=True) %}
+{% macro switch_mode_button(switch, class, tooltip, text, mode, disabled_when_focus=False, no_levels=True) %}
     {% set focus = switch.mode == mode %}
-    {% set disabled = focus and disabled %}
+    {% set disabled = focus and disabled_when_focus %}
     {% set form_id = '%s_%d' % (switch.id, mode) %}
     <button type="button" class="btn btn-lg {{ class }} {{ 'focus' if focus }}" {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels }}
             data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}" {{ 'disabled' if disabled }}>
@@ -27,7 +27,7 @@
 
 {% macro switch_mode_buttons(switch, class) %}
     <div class="{{ class }}" data-toggle="buttons">
-        {{ switch_mode_button(switch, 'btn-success', 'Start the automation service for this switch', 'Activate service', 0, disabled=True) }}
+        {{ switch_mode_button(switch, 'btn-success', 'Start the automation service for this switch', 'Activate service', 0, disabled_when_focus=True) }}
         {{ switch_mode_button(switch, 'btn-warning', 'Keep the switch on until the next scheduled event', 'Keep ON', 1) }}
         {{ switch_mode_button(switch, 'btn-warning', 'Keep the switch off until the next scheduled event', 'Keep OFF', 2) }}
         {{ switch_mode_button(switch, 'btn-danger', 'Keep the switch on continuously', '24/7 ON', 3) }}

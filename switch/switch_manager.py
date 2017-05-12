@@ -53,7 +53,7 @@ class SwitchManager(object):
 
     def __getitem__(self, switch_id):
         attrs = self._switches[switch_id]
-        switch_dict = {'id': switch_id, 'name': attrs['name'], 'schedules': self._schedules[switch_id]}
+        switch_dict = {'id': switch_id, 'name': attrs['name'], 'levels': attrs['levels'], 'schedules': self._schedules[switch_id]}
         switch_dict.update(self._states[switch_id])
         return switch_dict
 

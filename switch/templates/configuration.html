@@ -21,7 +21,7 @@
     </style>
 {% endblock %}
 
-{% macro day_panel(name, id) %}
+{% macro day_panel(name, id, levels = switch.levels) %}
     <h3>{{ name }}: <span id="slider-{{ id }}-header" class="slider-header"></span></h3>
     <div id="slider-{{ id }}" class="slider-day">
         <div id="slider-{{ id }}-range0" class="slider-range">
@@ -30,6 +30,13 @@
                 <input type="text" id="slider-{{ id }}-range0-data" style="border:0; color:#996633;" readonly>
                 <button type="button" id="slider-{{ id }}-range0-destroy" class="btn btn-xs btn-danger pull-right"><span
                         class="glyphicon glyphicon-trash"></span></button>
+                {% if levels > 1 %}
+                    <div style="display: inline-block; vertical-align: middle; margin-left: 10px;">
+                        <label style="display: inline-block">Level </label>
+                        <input type="number" min="1" max="{{ levels }}" placeholder="Level of intensity"
+                               style="display: inline-block" value="1" required>
+                    </div>
+                {% endif %}
             </div>
         </div>
         <button type="button" id="slider-{{ id }}-create" class="btn btn-default"><span
@@ -171,10 +178,12 @@
                 for (var i = 0; i < 7; i++) {
                     var slider = get_first_slider(i);
                     if(slider.hasClass('slider-range')) {
-                        arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96]);
+                        var level = parseInt(slider.find('input[type="number"]').val() || 1);
+                        arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96, level]);
                         while (slider.next(".slider-range").length !== 0) {
                             slider = slider.next();
-                            arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96]);
+                            var level = parseInt(slider.find('input[type="number"]').val() || 1);
+                            arrays.push([slider.slider("values", 0) + i * 96, slider.slider("values", 1) + i * 96, level]);
                         }
                     }
                 }
@@ -189,6 +198,7 @@
             });
             {% if schedule is not none %}
                 var schedule_data = {{ schedule.to_interface_list()|tojson }};
+                console.log(schedule_data);
                 for (i = 0; i < 7; i++) {
                     var slider = $("#slider-" + get_day(i) + "-range0");
                     if(schedule_data[i].length === 0) {
@@ -196,11 +206,13 @@
                     } else {
                         slider.slider("values", 0, schedule_data[i][0][0]);
                         slider.slider("values", 1, schedule_data[i][0][1]);
+                        slider.find('input[type="number"]').val(schedule_data[i][0][2]);
                         for (var j = 1; j < schedule_data[i].length; j++) {
                             $("#slider-" + get_day(i) + "-create").click();
                             slider = $("#slider-" + get_day(i) + "-range" + j);
                             slider.slider("values", 0, schedule_data[i][j][0]);
                             slider.slider("values", 1, schedule_data[i][j][1]);
+                            slider.find('input[type="number"]').val(schedule_data[i][j][2]);
                         }
                     }
                 }
@@ -283,6 +295,9 @@
                 var id = "slider-" + day + "-range" + index;
                 $("#slider-" + day + "-create").before("<div id=" + id + " class=\"slider-range\"></div>");
                 $("#" + id).append("<div class=\"slider\"> <label for=\"" + id + "-data\"> Time slot:</label> <input type=\"text\" id=\"" + id + "-data\" style=\"border:0; color:#996633;\" readonly> <button type=\"button\" id=\"" + id + "-destroy\" class=\"btn btn-xs btn-danger pull-right\"><span class=\"glyphicon glyphicon-trash\"></button>  </div>");
+                {% if switch.levels > 1 %}
+                    $("#" + id + " .slider").append('<div style="display: inline-block; vertical-align: middle; margin-left: 10px;"><label style="display: inline-block">Level&nbsp;</label><input type="number" id="' + id + '-level" min="1" max="{{ switch.levels }}" placeholder="Level of intensity" style="display: inline-block" value="1" required></div>');
+                {% endif %}
                 create_slider(day, index);
                 $("#slider-" + day).data("last_id", index);
             });

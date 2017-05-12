@@ -108,13 +108,13 @@ class Schedule(object):
         arrays = [[] for _ in range(7)]
         for interval in self._intervals:
             if interval.a.days == interval.b.days:
-                arrays[interval.a.days].append([interval.a.seconds // (60*15), interval.b.seconds // (60*15)])
+                arrays[interval.a.days].append([interval.a.seconds // (60*15), interval.b.seconds // (60*15), interval.weight])
             else:
-                arrays[interval.a.days].append([interval.a.seconds // (60 * 15), 96])
+                arrays[interval.a.days].append([interval.a.seconds // (60 * 15), 96, interval.weight])
                 for day in range(interval.a.days+1, min(interval.b.days+1, 7)):
                     if day == interval.b.days:
                         if interval.b.seconds > 0:
-                            arrays[day].append([0, interval.b.seconds // (60*15)])
+                            arrays[day].append([0, interval.b.seconds // (60*15), interval.weight])
                     else:
-                        arrays[day].append([0, 96])
+                        arrays[day].append([0, 96, interval.weight])
         return arrays

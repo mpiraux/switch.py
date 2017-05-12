@@ -50,8 +50,8 @@ def configure_switch(switch):
             return redirect(url_for('configure_switch', switch=switch))
 
         intervals = []
-        for a, b in schedule_intervals:
-            intervals.append(WeightedTimeInterval(Instant(minute=15 * a), Instant(minute=15 * b), w=1))
+        for a, b, l in schedule_intervals:
+            intervals.append(WeightedTimeInterval(Instant(minute=15 * a), Instant(minute=15 * b), w=l))
         app.switch_manager.add_schedule(switch, schedule_name, Schedule(intervals))
         flash('schedule_created')
         return redirect(url_for('index'))
