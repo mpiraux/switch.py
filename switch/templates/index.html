@@ -7,16 +7,22 @@
         .btn.btn-lg {
             border-width: 2px;
         }
+        .panel-title .label {
+            margin-left: 15px;
+            font-size: inherit;
+        }
     </style>
 {% endblock %}
 
 {% block title %}switch.py{% endblock %}
 
-{% macro switch_mode_button(switch, class, tooltip, text, mode, disabled_when_focus=False, no_levels=True) %}
+{% macro switch_mode_button(switch, class, tooltip, text, mode, disabled_when_focus=False, no_levels=switch.levels == 1) %}
     {% set focus = switch.mode == mode %}
     {% set disabled = focus and disabled_when_focus %}
     {% set form_id = '%s_%d' % (switch.id, mode) %}
-    <button type="button" class="btn btn-lg {{ class }} {{ 'focus' if focus }}" {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels }}
+    <button type="button" class="btn btn-lg {{ class }} {{ 'active focus' if focus }}"
+            {{ ('onclick="$(\'#%s\').submit();"' % form_id)|safe if no_levels
+            else ('onclick="update_form(\'%s\', \'%s\')"' % (switch.id, url_for('switch_mode', switch=switch.id, mode=mode)))|safe }}
             data-toggle="tooltip" data-placement="top" data-container="body" title="{{ tooltip }}" {{ 'disabled' if disabled }}>
         {{ text }}
     </button>
@@ -51,11 +57,38 @@
             <a class="btn btn-xs btn-primary pull-right" href="{{ url_for('configure_switch', switch=switch.id) }}">
                 <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
             </a>
-            <span class="panel-title"><strong>{{ switch.name }}</strong></span>
+            <span class="panel-title">
+                <strong>{{ switch.name }}</strong>
+                {% if switch.level == 0 %}
+                    <span class="label label-danger">Off</span>
+                {% elif switch.levels > 1 %}
+                    <span class="label label-info">Level {{ switch.level }}</span>
+                {% else %}
+                    <span class="label label-success">On</span>
+                {% endif %}
+            </span>
         </div>
-        <div id="pump-panel-body" class="panel-body">
+        <div class="panel-body">
             {{ switch_mode_buttons(switch, class='btn-group hidden-xs') }}
             {{ switch_mode_buttons(switch, class='btn-group-vertical visible-xs') }}
+
+            {% if switch.levels > 1 %}
+                <div id="{{ switch.id }}-level" class="row" style="margin-top: 15px;" hidden>
+                    <div class="col-sm-6 col-md-4">
+                        <form action="" method="post">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    Set the new level
+                                </span>
+                                <input type="number" min="1" max="{{ switch.levels }}" value="1" class="form-control">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="submit">Confirm mode</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
 
             {% if switch.schedules %}
                 <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 15px;">
@@ -133,7 +166,6 @@
                 table_cells.eq(i).children().eq(1).html(time_slots_string ? time_slots_string : 'No time slots');
             }
             modal.modal('show');
-            console.log(switch_name, schedule_name, schedule_data, schedule_link)
         }
 
         function get_day_time_slots_string(day_intervals, display_levels) {
@@ -152,6 +184,12 @@
                 }
             }
             return string;
+        }
+
+        function update_form(switch_id, base_url) {
+            $("#" + switch_id + "-level").prop('hidden', false).find('input').change(function() {
+                $("#" + switch_id + "-level").find('form').attr('action', base_url + '/level/' + this.value);
+            }).change();
         }
     </script>
 {% endblock %}
