@@ -85,7 +85,10 @@ class Schedule(object):
 
         now = Instant.now_to_instant()
         for idx, interval in enumerate(self._intervals):
-            if now in interval and interval.b < self._intervals[(idx + 1) % len(self._intervals)].a:
+            next_interval = self._intervals[(idx + 1) % len(self._intervals)]
+            if interval == next_interval:
+                next_interval = WeightedTimeInterval(interval.a + timedelta(weeks=1), interval.b + timedelta(weeks=1), interval.weight)
+            if now in interval and interval.b < next_interval.a:
                 # There is a gap between the current interval and the next one.
                 return None, interval.b.to_datetime()
             if now < interval:

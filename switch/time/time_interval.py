@@ -18,6 +18,34 @@ class Instant(timedelta):
             self.__class__.__qualname__, self.days, self.seconds // (60 * 60), (self.seconds // 60) % 60
         )
 
+    def __lt__(self, other):
+        if isinstance(other, RelativeTimeInterval):
+            return self < other.a
+        if isinstance(other, Instant):
+            return super().__lt__(other)
+        return NotImplemented
+
+    def __le__(self, other):
+        if isinstance(other, RelativeTimeInterval):
+            return self <= other.a
+        if isinstance(other, Instant):
+            return super().__le__(other)
+        return NotImplemented
+
+    def __gt__(self, other):
+        if isinstance(other, RelativeTimeInterval):
+            return self > other.b
+        if isinstance(other, Instant):
+            return super().__gt__(other)
+        return NotImplemented
+
+    def __ge__(self, other):
+        if isinstance(other, RelativeTimeInterval):
+            return self >= other.b
+        if isinstance(other, Instant):
+            return super().__ge__(other)
+        return NotImplemented
+
     def to_datetime(self):
         today = date.today()
         week_start = datetime.combine(today - timedelta(days=today.weekday()), time())
