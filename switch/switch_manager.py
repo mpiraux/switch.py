@@ -72,7 +72,7 @@ class SwitchManager(object):
         if level > 0:
             self._modules[switch].on(switch, level)
         else:
-            self._modules[switch].off(switch, level)
+            self._modules[switch].off(switch)
         self.save_switch(switch)
         if schedule_next:
             self._schedule_next_event()
@@ -93,6 +93,7 @@ class SwitchManager(object):
 
     def determine_next_actions(self):
         actions = []
+        instant = None
         for switch in self._states:
             state = self._states[switch]
             schedule = self._schedules[switch].get(state.get('active_schedule'))
@@ -101,19 +102,22 @@ class SwitchManager(object):
                 weight = weight or 0
                 if not actions:
                     actions.append((switch, weight, datetime))
-                elif datetime < actions[0][2]:  # Action is closer than everything previously encountered
+                    instant = datetime
+                elif datetime < instant:
                     actions = [(switch, weight, datetime)]
-                elif datetime == actions[0][2]:
+                    instant = datetime
+                elif datetime == instant:
                     actions.append((switch, weight, datetime))
             else:
                 # TODO: Handle timer
                 pass
-        return actions
+        return actions, instant
 
     def _schedule_next_event(self):
         map(self._sched.cancel, self._sched.queue)
-        actions = self.determine_next_actions()
-        self._next_event = self._sched.enterabs(actions[0][2].timestamp(), 1, self._handle_event, argument=(self, actions))
+        actions, datetime = self.determine_next_actions()
+        if actions:
+            self._next_event = self._sched.enterabs(datetime.timestamp(), 1, self._handle_event, argument=(self, actions))
 
     def _handle_event(self, actions):
         print('handle', actions)
