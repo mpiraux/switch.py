@@ -8,6 +8,7 @@ import time
 
 from switch import join_root
 from switch.time.schedule import Schedule
+from switch.log import logger
 
 
 class SwitchManager(object):
@@ -18,10 +19,13 @@ class SwitchManager(object):
         self._modules = {}
         self._schedules = {}
         self._states = {}
+        logger.debug('Proceeding to load switches', extra=dict(context='General'))
         for switch in switch_definitions:
             self._states[switch] = {'level': 0, 'mode': 0}
             self._modules[switch] = import_module('switch.switches.%s' % self._switches[switch]['module'])
             self._load_switch(switch)
+            logger.debug('\nstate: %s\nschedules: %s', self._states[switch], self._schedules[switch], extra=dict(context=switch))
+        logger.debug('Proceeding to start scheduler', extra=dict(context='General'))
         self._running = True
         self._next_event = None
         self._sched = sched.scheduler(timefunc=time.time)
@@ -45,8 +49,8 @@ class SwitchManager(object):
         switch_data_path = self._get_switch_data_path(switch_id)
         with open(switch_data_path, 'w') as f:
             switch_data = dict(**self._states[switch_id])
-            switch_data['schedules'] = {schedule_name: schedule.to_dict() for schedule_name, schedule in
-                                        self._schedules[switch_id].items()}
+            switch_data['schedules'] = {schedule_name: schedule.to_dict()
+                                        for schedule_name, schedule in self._schedules[switch_id].items()}
             json.dump(switch_data, f)
 
     def add_schedule(self, switch, schedule_name, schedule):
@@ -74,6 +78,7 @@ class SwitchManager(object):
         else:
             self._modules[switch].off(switch)
         self.save_switch(switch)
+        logger.info('New level=%d', level, extra=dict(context=switch))
         if schedule_next:
             self._schedule_next_event()
 
@@ -118,9 +123,11 @@ class SwitchManager(object):
         actions, datetime = self.determine_next_actions()
         if actions:
             self._next_event = self._sched.enterabs(datetime.timestamp(), 1, self._handle_event, argument=(self, actions))
+            logger.info('Next scheduled event is %s and will affect switches %s', datetime,
+                        [switch for switch, _, _ in actions], extra=dict(context='General'))
 
     def _handle_event(self, actions):
-        print('handle', actions)
+        logger.debug('A scheduled event expired', extra=dict(context='General'))
         for switch, level, _ in actions:
             state = self._states[switch]
             if state['mode'] < 3:
