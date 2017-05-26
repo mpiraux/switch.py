@@ -10,6 +10,30 @@
                 body {
                     padding-top: 50px;
                 }
+
+                @media (min-width: 1400px) {
+                    .container {
+                        width: 1365px;
+                    }
+                }
+
+                .panel-heading-sm {
+                    height: 28px;
+                    padding: 4px 10px;
+                }
+
+                .panel-body-sm {
+                    padding: 5px 10px;
+                }
+
+                .panel-body-sm span.label {
+                    position: relative;
+                    top: -2px;
+                }
+
+                .panel-sm {
+                    margin-bottom: 5px;
+                }
             </style>
         {% endblock %}
         <title>{% block title %}{% endblock %}</title>

@@ -8,7 +8,7 @@ import time
 
 from switch import join_root
 from switch.time.schedule import Schedule
-from switch.log import logger
+from switch.log import app_logger as logger
 
 
 class SwitchManager(object):
@@ -86,11 +86,16 @@ class SwitchManager(object):
         return iter([self[switch_id] for switch_id in self._switches])
 
     def __getitem__(self, switch_id):
-        attrs = self._switches[switch_id]
+        attrs = self._switches.get(switch_id)
+        if not attrs:
+            return None
         switch_dict = {'id': switch_id, 'name': attrs['name'], 'levels': attrs['levels'],
                        'schedules': self._schedules[switch_id]}
         switch_dict.update(self._states[switch_id])
         return switch_dict
+
+    def __contains__(self, item):
+        return self[item] is not None
 
     def __del__(self):
         self._running = False

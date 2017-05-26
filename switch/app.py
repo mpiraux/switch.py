@@ -8,8 +8,8 @@ from switch import join_root
 from switch.switch_manager import SwitchManager
 from switch.time.schedule import Schedule
 from switch.time.time_interval import WeightedTimeInterval, Instant
-from switch.utils import ensure_directory_exists, load_config_file
-from switch.log import logger
+from switch.utils import ensure_directory_exists, load_config_file, mode_to_html
+from switch.log import app_logger as logger, frontend_logger, frontend_handler
 
 ensure_directory_exists(join_root('data'))
 
@@ -20,6 +20,7 @@ app.config['BOWER_QUERYSTRING_REVVING'] = False
 Bower(app)
 app.switch_config = load_config_file(join_root('configuration' + os.extsep + 'yaml'))
 app.switch_manager = SwitchManager(app.switch_config['switches'])
+frontend_handler.get_context_name = lambda x: app.switch_manager[x]['name'] if x in app.switch_manager else x.title()
 
 
 @app.context_processor
@@ -29,7 +30,7 @@ def inject_switch_manager():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', logs=frontend_handler.get_records())
 
 
 @app.route('/configuration/<switch>', methods=['GET', 'POST'])
@@ -83,7 +84,8 @@ def delete_switch_schedule(switch, schedule):
 @app.route('/switch/<switch>/use/<schedule>', methods=['POST'])
 def use_switch_schedule(switch, schedule):
     app.switch_manager.use_schedule(switch, schedule)
-    logger.info('Schedule %s is active', extra=dict(context=switch))
+    logger.info('Schedule %s is active', schedule, extra=dict(context=switch))
+    frontend_logger.info('Schedule %s was set as active', schedule, extra=dict(context=switch))
     flash('schedule_used')
     return redirect(url_for('index'))
 
@@ -94,6 +96,10 @@ def switch_mode(switch, mode, level=1):
     level = 0 if mode == 2 or mode == 4 else level
     app.switch_manager.switch_mode(switch, mode, level=level)
     logger.info('New settings {mode=%d, level=%d}', mode, level, extra=dict(context=switch))
+    if app.switch_manager[switch]['levels'] > 1 and mode not in [2, 4]:
+        frontend_logger.info('Switch was set to <small>%s</small> at level %d', mode_to_html[mode], level, extra=dict(context=switch))
+    else:
+        frontend_logger.info('Switch was set to <small>%s</small>', mode_to_html[mode], extra=dict(context=switch))
     flash('mode_switched')
     return redirect(url_for('index'))
 
