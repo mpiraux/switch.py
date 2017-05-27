@@ -96,7 +96,7 @@ def switch_mode(switch, mode, level=1):
     level = 0 if mode == 2 or mode == 4 else level
     app.switch_manager.switch_mode(switch, mode, level=level)
     logger.info('New settings {mode=%d, level=%d}', mode, level, extra=dict(context=switch))
-    if app.switch_manager[switch]['levels'] > 1 and mode not in [2, 4]:
+    if app.switch_manager[switch]['levels'] > 1 and mode not in [0, 2, 4]:
         frontend_logger.info('Switch was set to <small>%s</small> at level %d', mode_to_html[mode], level, extra=dict(context=switch))
     else:
         frontend_logger.info('Switch was set to <small>%s</small>', mode_to_html[mode], extra=dict(context=switch))

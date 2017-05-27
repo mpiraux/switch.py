@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from json import JSONEncoder, JSONDecoder
 
 import yaml
+import yamlordereddictloader
 
 mode_to_name = {
     0: 'Automated schedule',
@@ -30,7 +31,7 @@ def ensure_directory_exists(path):
 
 def load_config_file(path):
     with open(path, 'r') as f:
-        return yaml.load(f)
+        return yaml.load(f, Loader=yamlordereddictloader.Loader)
 
 
 def timesince(dt, default="just now"):
@@ -49,7 +50,7 @@ def timesince(dt, default="just now"):
         (diff.days, "day", "days"),
         (diff.seconds // 3600, "hour", "hours"),
         (diff.seconds // 60, "minute", "minutes"),
-        (diff.seconds, "second", "seconds"),
+        (diff.seconds, "second", "seconds")
     )
 
     for period, singular, plural in periods:

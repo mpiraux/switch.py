@@ -73,7 +73,7 @@ class Schedule(object):
                 previous_instant = self._intervals[previous_idx].b.to_datetime()
                 if previous_idx > idx:
                     previous_instant -= timedelta(weeks=1)
-                return interval.weight, previous_instant
+                return None, previous_instant
 
     def get_next_action(self):
         """
@@ -85,17 +85,15 @@ class Schedule(object):
 
         now = Instant.now_to_instant()
         for idx, interval in enumerate(self._intervals):
+            if now < interval:
+                return interval.weight, interval.a.to_datetime()
             next_interval = self._intervals[(idx + 1) % len(self._intervals)]
             if interval == next_interval:
                 next_interval = WeightedTimeInterval(interval.a + timedelta(weeks=1), interval.b + timedelta(weeks=1), interval.weight)
             if now in interval and interval.b < next_interval.a:
                 # There is a gap between the current interval and the next one.
                 return None, interval.b.to_datetime()
-            if now < interval:
-                return interval.weight, interval.a.to_datetime()
-        # No interval was found, going back to the start and add one week.
-        interval = self._intervals[0]
-        return interval.weight, interval.a.to_datetime() + timedelta(weeks=1)
+        return None
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))

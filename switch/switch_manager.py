@@ -67,11 +67,19 @@ class SwitchManager(object):
     def use_schedule(self, switch, schedule_name):
         if schedule_name in self._schedules[switch]:
             self._states[switch]['active_schedule'] = schedule_name
-        self.save_switch(switch)
-        self._schedule_next_event()
+            current_level, _ = self._schedules[switch][schedule_name].get_current_action()
+            self.set_level(switch, current_level or 0)
+            self._schedule_next_event()
 
-    def switch_mode(self, switch, mode, level, schedule_next=True):
+    def switch_mode(self, switch, mode, level):
         self._states[switch]['mode'] = mode
+        if mode == 0:
+            self.use_schedule(switch, self._states[switch].get('active_schedule'))
+            self.save_switch(switch)
+        else:
+            self.set_level(switch, level)
+
+    def set_level(self, switch, level):
         self._states[switch]['level'] = level
         if level > 0:
             self._modules[switch].on(switch, level)
@@ -79,8 +87,6 @@ class SwitchManager(object):
             self._modules[switch].off(switch)
         self.save_switch(switch)
         logger.info('New level=%d', level, extra=dict(context=switch))
-        if schedule_next:
-            self._schedule_next_event()
 
     def __iter__(self):
         return iter([self[switch_id] for switch_id in self._switches])
@@ -92,6 +98,10 @@ class SwitchManager(object):
         switch_dict = {'id': switch_id, 'name': attrs['name'], 'levels': attrs['levels'],
                        'schedules': self._schedules[switch_id]}
         switch_dict.update(self._states[switch_id])
+        active_schedule = switch_dict.get('active_schedule')
+        if active_schedule:
+            level, date = self._schedules[switch_id][active_schedule].get_next_action()
+            switch_dict['next_action'] = (level or 0, date)
         return switch_dict
 
     def __contains__(self, item):
@@ -107,7 +117,7 @@ class SwitchManager(object):
         for switch in self._states:
             state = self._states[switch]
             schedule = self._schedules[switch].get(state.get('active_schedule'))
-            if state['mode'] < 3 and schedule:
+            if state['mode'] < 3 and schedule and schedule.get_next_action():
                 weight, datetime = schedule.get_next_action()
                 weight = weight or 0
                 if not actions:
@@ -136,7 +146,7 @@ class SwitchManager(object):
         for switch, level, _ in actions:
             state = self._states[switch]
             if state['mode'] < 3:
-                self.switch_mode(switch, state['mode'], level, schedule_next=False)
+                self.set_level(switch, level)
         self._schedule_next_event()
 
     def _run_sched(self):

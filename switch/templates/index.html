@@ -61,7 +61,7 @@
                             <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
                         </a>
                         <span class="panel-title">
-                <strong>{{ switch.name }}</strong>
+                            <strong>{{ switch.name }}</strong>
                             {% if switch.level == 0 %}
                                 <span class="label label-danger">Off</span>
                             {% elif switch.levels > 1 %}
@@ -69,7 +69,23 @@
                             {% else %}
                                 <span class="label label-success">On</span>
                             {% endif %}
-            </span>
+                        </span>
+                        {% if switch.next_action %}
+                            <small style="margin-left: 15px;">
+                            {% set level, datetime = switch.next_action %}
+                                Next action:
+                            {% if level > 0 %}
+                                {% if switch.levels > 1 %}
+                                    setting the switch to level {{ level }}
+                                {% else %}
+                                    setting the switch on
+                                {% endif %}
+                            {% else %}
+                                setting the switch off
+                            {% endif %}
+                            on {{ datetime.strftime("%a %b %d at %H:%M") }}
+                            </small>
+                        {% endif %}
                     </div>
                     <div class="panel-body">
                         {{ switch_mode_buttons(switch, class='btn-group hidden-xs') }}
@@ -77,17 +93,17 @@
 
                         {% if switch.levels > 1 %}
                             <div id="{{ switch.id }}-level" class="row" style="margin-top: 15px;" hidden>
-                                <div class="col-sm-6 col-md-4">
+                                <div class="col-sm-6 col-md-5">
                                     <form action="" method="post">
                                         <div class="input-group">
-                                <span class="input-group-addon">
-                                    Set the new level
-                                </span>
+                                            <span class="input-group-addon">
+                                                Set the new level
+                                            </span>
                                             <input type="number" min="1" max="{{ switch.levels }}" value="1"
                                                    class="form-control">
                                             <span class="input-group-btn">
-                                    <button class="btn btn-default" type="submit">Confirm mode</button>
-                                </span>
+                                                <button class="btn btn-default" type="submit">Confirm mode</button>
+                                            </span>
                                         </div>
                                     </form>
                                 </div>
