@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+from json import JSONEncoder, JSONDecoder
 
 import yaml
 
@@ -56,3 +57,37 @@ def timesince(dt, default="just now"):
             return "%d %s ago" % (period, singular if period == 1 else plural)
 
     return default
+
+
+class DateTimeDecoder(JSONDecoder):
+    def __init__(self, *args, **kargs):
+        JSONDecoder.__init__(self, object_hook=self.dict_to_object, *args, **kargs)
+
+    @staticmethod
+    def dict_to_object(d):
+        if '__type__' not in d:
+            return d
+
+        t = d.pop('__type__')
+        if t == 'datetime':
+            return datetime(**d)
+        else:
+            d['__type__'] = t
+            return d
+
+
+class DateTimeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {
+                '__type__': 'datetime',
+                'year': obj.year,
+                'month': obj.month,
+                'day': obj.day,
+                'hour': obj.hour,
+                'minute': obj.minute,
+                'second': obj.second,
+                'microsecond': obj.microsecond,
+            }
+        else:
+            return JSONEncoder.default(self, obj)

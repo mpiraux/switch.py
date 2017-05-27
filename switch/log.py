@@ -1,9 +1,11 @@
+import json
+import logging
+import os
 from datetime import datetime
+from threading import Lock
 
 from switch import join_root
-import logging
-
-from switch.utils import timesince
+from switch.utils import timesince, DateTimeEncoder, DateTimeDecoder
 
 
 def get_app_logger():
@@ -28,12 +30,24 @@ def get_frontend_logger():
 
 class FrontendHandler(logging.Handler):
     def __init__(self, level=logging.NOTSET):
+        frontend_logs_path = join_root('data', 'frontend_logs.data')
         self._records = []
+        if os.path.exists(frontend_logs_path):
+            with open(frontend_logs_path, 'r') as f:
+                for line in f.readlines():
+                    self._records.append(json.loads(line, cls=DateTimeDecoder))
+        self._records_file = open(frontend_logs_path, 'a')
+        self._records_file_lock = Lock()
         self.get_context_name = None
         super().__init__(level)
 
     def emit(self, record):
-        self._records.append((datetime.fromtimestamp(record.created), record.context, record.getMessage()))
+        record = (datetime.fromtimestamp(record.created), record.context, record.getMessage())
+        self._records.append(record)
+        with self._records_file_lock:
+            json.dump(record, self._records_file, cls=DateTimeEncoder)
+            self._records_file.write('\n')
+            self._records_file.flush()
 
     def get_records(self):
         logs_records = []
@@ -41,6 +55,9 @@ class FrontendHandler(logging.Handler):
             logs_records.append((self.get_context_name(context), message, timesince(date), date.strftime('%c')))
         logs_records.reverse()
         return logs_records
+
+    def __del__(self):
+        self._records_file.close()
 
 app_logger = get_app_logger()
 frontend_logger = get_frontend_logger()
