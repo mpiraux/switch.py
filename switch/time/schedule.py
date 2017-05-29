@@ -1,3 +1,9 @@
+#
+# This file is part of switch.py. See the LICENSE and the COPYRIGHTS files for
+# more information about the licensing of this file.
+#
+
+
 from datetime import timedelta
 
 from switch.time.time_interval import WeightedTimeInterval, Instant
