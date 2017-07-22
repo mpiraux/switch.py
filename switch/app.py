@@ -56,37 +56,37 @@ def index():
     return render_template('index.html', logs=frontend_handler.get_records())
 
 
-@app.route('/configuration/<switch>', methods=['GET', 'POST'])
-def configure_switch(switch):
-    def get():
-        return render_template('configuration.html', switch=app.switch_manager[switch], schedule=None)
+@app.route('/configuration/<switch>', methods=['GET'])
+def get_configure_switch(switch):
+    return render_template('configuration.html', switch=app.switch_manager[switch], schedule=None)
 
-    def post():
-        schedules = app.switch_manager[switch]['schedules']
 
-        if 'replace-sched' in request.form and 'new-sched-name' in request.form:
-            schedule_name = request.form['new-sched-name']
-            app.switch_manager.delete_schedule(switch, request.form['replace-sched'])
-            logger.info('Schedule %s will be replaced by %s', request.form['replace-sched'], schedule_name,
-                        extra=dict(context=switch))
-        else:
-            schedule_name = request.form['name']
+@app.route('/configuration/<switch>', methods=['POST'])
+def post_configure_switch(switch):
+    schedules = app.switch_manager[switch]['schedules']
 
-        schedule_intervals = json.loads(request.form['intervals'])
-        if schedule_name in schedules:
-            logger.info('A schedule with the name %s already exists for this switch', schedule_name, extra=dict(context=switch))
-            flash('schedule_already_exists')
-            return redirect(url_for('configure_switch', switch=switch))
+    if 'replace-sched' in request.form and 'new-sched-name' in request.form:
+        schedule_name = request.form['new-sched-name']
+        app.switch_manager.delete_schedule(switch, request.form['replace-sched'])
+        logger.info('Schedule %s will be replaced by %s', request.form['replace-sched'], schedule_name,
+                    extra=dict(context=switch))
+    else:
+        schedule_name = request.form['name']
 
-        intervals = []
-        for a, b, l in schedule_intervals:
-            intervals.append(WeightedTimeInterval(Instant(minute=15 * a), Instant(minute=15 * b), w=l))
-        app.switch_manager.add_schedule(switch, schedule_name, Schedule(intervals))
-        logger.info('Schedule %s was created', schedule_name, extra=dict(context=switch))
-        flash('schedule_created')
-        return redirect(url_for('index'))
+    schedule_intervals = json.loads(request.form['intervals'])
+    if schedule_name in schedules:
+        logger.info('A schedule with the name %s already exists for this switch', schedule_name,
+                    extra=dict(context=switch))
+        flash('schedule_already_exists')
+        return redirect(url_for('configure_switch', switch=switch))
 
-    return get() if request.method == 'GET' else post()
+    intervals = []
+    for a, b, l in schedule_intervals:
+        intervals.append(WeightedTimeInterval(Instant(minute=15 * a), Instant(minute=15 * b), w=l))
+    app.switch_manager.add_schedule(switch, schedule_name, Schedule(intervals))
+    logger.info('Schedule %s was created', schedule_name, extra=dict(context=switch))
+    flash('schedule_created')
+    return redirect(url_for('index'))
 
 
 @app.route('/configuration/<switch>/<schedule>')
