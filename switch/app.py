@@ -58,9 +58,10 @@ def index():
 
 @app.route('/configuration/<switch>', methods=['GET', 'POST'])
 def configure_switch(switch):
-    if request.method == 'GET':
+    def get():
         return render_template('configuration.html', switch=app.switch_manager[switch], schedule=None)
-    elif request.method == 'POST':
+
+    def post():
         schedules = app.switch_manager[switch]['schedules']
 
         if 'replace-sched' in request.form and 'new-sched-name' in request.form:
@@ -84,6 +85,8 @@ def configure_switch(switch):
         logger.info('Schedule %s was created', schedule_name, extra=dict(context=switch))
         flash('schedule_created')
         return redirect(url_for('index'))
+
+    return get() if request.method == 'GET' else post()
 
 
 @app.route('/configuration/<switch>/<schedule>')

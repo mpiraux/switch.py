@@ -119,26 +119,34 @@ class SwitchManager(object):
         map(self._sched.cancel, self._sched.queue)
 
     def determine_next_actions(self):
-        actions = []
+        actions = [self.determine_next_action_for(switch) for switch in self._states]
+        actions = filter(lambda x: x is not None, actions)
+
+        earliest_actions = []
         instant = None
-        for switch in self._states:
-            state = self._states[switch]
-            schedule = self._schedules[switch].get(state.get('active_schedule'))
-            if state['mode'] < 3 and schedule and schedule.get_next_action():
-                weight, datetime = schedule.get_next_action()
-                weight = weight or 0
-                if not actions:
-                    actions.append((switch, weight, datetime))
-                    instant = datetime
-                elif datetime < instant:
-                    actions = [(switch, weight, datetime)]
-                    instant = datetime
-                elif datetime == instant:
-                    actions.append((switch, weight, datetime))
-            else:
-                # TODO: Handle timer
-                pass
-        return actions, instant
+        for action in actions:
+            switch, weight, datetime = action
+            if not earliest_actions:
+                earliest_actions.append((switch, weight, datetime))
+                instant = datetime
+            elif datetime < instant:
+                earliest_actions = [(switch, weight, datetime)]
+                instant = datetime
+            elif datetime == instant:
+                earliest_actions.append((switch, weight, datetime))
+
+        return earliest_actions, instant
+
+    def determine_next_action_for(self, switch):
+        state = self._states[switch]
+        schedule = self._schedules[switch].get(state.get('active_schedule'))
+        if state['mode'] < 3 and schedule and schedule.get_next_action():
+            weight, datetime = schedule.get_next_action()
+            return switch, weight or 0, datetime
+        else:
+            # TODO: Handle timer
+            pass
+        return None
 
     def _schedule_next_event(self):
         map(self._sched.cancel, self._sched.queue)
