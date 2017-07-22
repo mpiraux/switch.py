@@ -2,12 +2,11 @@
 # This file is part of switch.py. See the LICENSE and the COPYRIGHTS files for
 # more information about the licensing of this file.
 #
-
-
+import hashlib
 import json
 import os
 
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, Response
 from flask_bower import Bower
 
 from switch import join_root
@@ -27,6 +26,24 @@ Bower(app)
 app.switch_config = load_config_file(join_root('configuration' + os.extsep + 'yaml'))
 app.switch_manager = SwitchManager(app.switch_config['switches'])
 frontend_handler.get_context_name = lambda x: app.switch_manager[x]['name'] if x in app.switch_manager else x.title()
+
+
+def check_auth(user, password):
+    return user == app.switch_config['user'] and hashlib.sha256(password.encode()).hexdigest() == app.switch_config['password']
+
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response('Could not verify your access level for that URL.\n'
+                    'You have to login with proper credentials', 401,
+                    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+
+@app.before_request
+def ensure_auth():
+    auth = request.authorization
+    if not auth or not check_auth(auth.username, auth.password):
+        return authenticate()
 
 
 @app.context_processor
