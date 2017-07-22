@@ -50,6 +50,7 @@ class SwitchManager(object):
                 self._states[switch_id] = switch_data
                 for schedule_name, schedule_dict in schedules_data.items():
                     self._schedules[switch_id][schedule_name] = Schedule.from_dict(schedule_dict)
+                self.set_level(switch_id, self._states[switch_id]['level'])
 
     def save_switch(self, switch_id):
         switch_data_path = self._get_switch_data_path(switch_id)
