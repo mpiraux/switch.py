@@ -103,9 +103,11 @@ def switch_mode(switch, mode, level=1):
     app.switch_manager.switch_mode(switch, mode, level=level)
     logger.info('New settings {mode=%d, level=%d}', mode, level, extra=dict(context=switch))
     if app.switch_manager[switch]['levels'] > 1 and mode not in [0, 2, 4]:
-        frontend_logger.info('Switch was set to <small>%s</small> at level %d', mode_to_html[mode], level, extra=dict(context=switch))
+        frontend_logger.info('Switch was set to <small>%s</small> at level %d by IP %s', mode_to_html[mode], level,
+                             request.remote_addr, extra=dict(context=switch))
     else:
-        frontend_logger.info('Switch was set to <small>%s</small>', mode_to_html[mode], extra=dict(context=switch))
+        frontend_logger.info('Switch was set to <small>%s</small> by IP %s', mode_to_html[mode], request.remote_addr,
+                             extra=dict(context=switch))
     flash('mode_switched')
     return redirect(url_for('index'))
 
