@@ -120,7 +120,7 @@
                             <div class="btn-group" data-toggle="buttons" style="display: block; margin-top: 15px;">
                                 {% for schedule in switch.schedules %}
                                     <label class="btn btn-lg btn-primary {{ 'active' if switch.active_schedule == schedule }}"
-                                           onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.levels }}, {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule|urlencode) }}');">
+                                           onclick="show_schedule_modal('{{ switch.name }}','{{ schedule }}', {{ switch.levels }}, {{ switch.schedules[schedule].to_interface_list() }}, '{{ url_for('use_switch_schedule', switch=switch.id, schedule=schedule) }}');">
                                         <span>{{ schedule }}</span>
                                     </label>
                                 {% endfor %}
