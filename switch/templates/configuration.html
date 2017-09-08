@@ -81,7 +81,7 @@
         <div class="panel-body">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <form action="{{ url_for('configure_switch', switch=switch.id) }}" method="post">
+                    <form action="{{ url_for('post_configure_switch', switch=switch.id) }}" method="post">
                         <input type="hidden" name="intervals">
                         <div style="display: inline-block; vertical-align: middle;">
                             <label style="display: inline-block">Schedule name</label>
@@ -95,7 +95,7 @@
                 {% if schedule is not none %}
                 <div><i>or</i></div>
                 <div>
-                    <form action="{{ url_for('configure_switch', switch=switch.id) }}" method="post">
+                    <form action="{{ url_for('post_configure_switch', switch=switch.id) }}" method="post">
                         <input type="hidden" name="intervals">
                         <div style="display: inline-block; vertical-align: middle;">
                             <label for="post-sched-list">Replace</label>
@@ -197,9 +197,9 @@
             });
             $('#sched-list').change(function() {
                 if(this.selectedOptions[0].hasAttribute('value')) {
-                    window.location = '{{ url_for('configure_switch', switch=switch.id) }}' + '/' + this.selectedOptions[0].getAttribute('value');
+                    window.location = '{{ url_for('get_configure_switch', switch=switch.id) }}' + '/' + this.selectedOptions[0].getAttribute('value');
                 } else {
-                    window.location = '{{ url_for('configure_switch', switch=switch.id) }}';
+                    window.location = '{{ url_for('get_configure_switch', switch=switch.id) }}';
                 }
             });
             {% if schedule is not none %}

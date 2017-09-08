@@ -78,7 +78,7 @@ def post_configure_switch(switch):
         logger.info('A schedule with the name %s already exists for this switch', schedule_name,
                     extra=dict(context=switch))
         flash('schedule_already_exists')
-        return redirect(url_for('configure_switch', switch=switch))
+        return redirect(url_for('get_configure_switch', switch=switch))
 
     intervals = []
     for a, b, l in schedule_intervals:

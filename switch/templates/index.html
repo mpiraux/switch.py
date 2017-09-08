@@ -63,7 +63,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <a class="btn btn-xs btn-primary pull-right"
-                           href="{{ url_for('configure_switch', switch=switch.id) }}">
+                           href="{{ url_for('get_configure_switch', switch=switch.id) }}">
                             <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
                         </a>
                         <span class="panel-title">
@@ -129,7 +129,7 @@
                             <div class="alert alert-info" role="alert" style="margin-top: 15px; margin-bottom: 0;">
                                 There is no schedule for this switch.
                                 <a class="btn btn-xs btn-primary"
-                                   href="{{ url_for('configure_switch', switch=switch.id) }}">
+                                   href="{{ url_for('get_configure_switch', switch=switch.id) }}">
                                     <span class="glyphicon glyphicon-wrench"></span> <strong>Configure</strong>
                                 </a> it to add a schedule. Of course, you can still use the manual functions above.
                             </div>
