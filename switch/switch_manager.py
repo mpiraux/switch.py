@@ -36,7 +36,6 @@ class SwitchManager(object):
         self._next_event = None
         self._sched = sched.scheduler(timefunc=time.time)
         self._sched_thread = Thread(target=self._run_sched)
-        self._sched_thread.daemon = True
         self._schedule_next_event()
         self._sched_thread.start()
 
