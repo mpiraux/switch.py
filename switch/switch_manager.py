@@ -152,7 +152,7 @@ class SwitchManager(object):
         map(self._sched.cancel, self._sched.queue)
         actions, datetime = self.determine_next_actions()
         if actions:
-            self._next_event = self._sched.enterabs(datetime.timestamp(), 1, self._handle_event, argument=(self, actions))
+            self._next_event = self._sched.enterabs(datetime.timestamp(), 1, self._handle_event, argument=(actions,))
             logger.info('Next scheduled event is %s and will affect switches %s', datetime,
                         [switch for switch, _, _ in actions], extra=dict(context='General'))
 
