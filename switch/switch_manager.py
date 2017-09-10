@@ -106,8 +106,10 @@ class SwitchManager(object):
         switch_dict.update(self._states[switch_id])
         active_schedule = switch_dict.get('active_schedule')
         if active_schedule:
-            level, date = self._schedules[switch_id][active_schedule].get_next_action()
-            switch_dict['next_action'] = (level or 0, date)
+            next_action = self._schedules[switch_id][active_schedule].get_next_action()
+            if next_action:
+                level, date = next_action
+                switch_dict['next_action'] = (level or 0, date)
         return switch_dict
 
     def __contains__(self, item):
