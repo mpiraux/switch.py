@@ -99,7 +99,8 @@ class Schedule(object):
             if now in interval and interval.b < next_interval.a:
                 # There is a gap between the current interval and the next one.
                 return None, interval.b.to_datetime()
-        return None
+
+        return self._intervals[0].weight, self._intervals[0].b + timedelta(weeks=1)
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))
