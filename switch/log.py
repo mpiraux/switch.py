@@ -8,6 +8,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 from threading import Lock
 
 from switch import join_root
@@ -42,7 +43,9 @@ class FrontendHandler(logging.Handler):
             with open(frontend_logs_path, 'r') as f:
                 for line in f.readlines():
                     self._records.append(json.loads(line, cls=DateTimeDecoder))
-        self._records_file = open(frontend_logs_path, 'a')
+        else:
+            Path(frontend_logs_path).touch()
+        self._records_file = open(frontend_logs_path, 'a+')
         self._records_file_lock = Lock()
         self.get_context_name = None
         super().__init__(level)
@@ -66,5 +69,3 @@ class FrontendHandler(logging.Handler):
         self._records_file.close()
 
 app_logger = get_app_logger()
-frontend_logger = get_frontend_logger()
-frontend_handler = frontend_logger.handlers[0]

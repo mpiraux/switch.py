@@ -14,7 +14,7 @@ from switch.switch_manager import SwitchManager
 from switch.time.schedule import Schedule
 from switch.time.time_interval import WeightedTimeInterval, Instant
 from switch.utils import ensure_directory_exists, load_config_file, mode_to_html
-from switch.log import app_logger as logger, frontend_logger, frontend_handler
+from switch.log import app_logger as logger, get_frontend_logger
 
 ensure_directory_exists(join_root('data'))
 
@@ -25,6 +25,8 @@ app.config['BOWER_QUERYSTRING_REVVING'] = False
 Bower(app)
 app.switch_config = load_config_file(join_root('configuration' + os.extsep + 'yaml'))
 app.switch_manager = SwitchManager(app.switch_config['switches'])
+frontend_logger = get_frontend_logger()
+frontend_handler = frontend_logger.handlers[0]
 frontend_handler.get_context_name = lambda x: app.switch_manager[x]['name'] if x in app.switch_manager else x.title()
 
 
