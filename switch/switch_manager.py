@@ -81,7 +81,6 @@ class SwitchManager(object):
         self._states[switch]['mode'] = mode
         if mode == 0:
             self.use_schedule(switch, self._states[switch].get('active_schedule'))
-            self.save_switch(switch)
         else:
             self.set_level(switch, level)
 
@@ -162,7 +161,7 @@ class SwitchManager(object):
         for switch, level, _ in actions:
             state = self._states[switch]
             if state['mode'] < 3:
-                self.set_level(switch, level)
+                self.switch_mode(switch, 0, level)
         self._schedule_next_event()
 
     def _run_sched(self):
