@@ -4,7 +4,7 @@
 #
 
 
-from datetime import timedelta
+from datetime import timedelta, datetime, date, time
 
 from switch.time.time_interval import WeightedTimeInterval, Instant
 
@@ -80,6 +80,7 @@ class Schedule(object):
                 if previous_idx > idx:
                     previous_instant -= timedelta(weeks=1)
                 return None, previous_instant
+        return None, self._intervals[(idx - 1) % len(self._intervals)].b.to_datetime()
 
     def get_next_action(self):
         """
@@ -100,7 +101,7 @@ class Schedule(object):
                 # There is a gap between the current interval and the next one.
                 return None, interval.b.to_datetime()
 
-        return self._intervals[0].weight, self._intervals[0].b + timedelta(weeks=1)
+        return self._intervals[0].weight, self._intervals[0].a.to_datetime() + timedelta(weeks=1)
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))
