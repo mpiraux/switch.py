@@ -66,14 +66,12 @@ class SwitchManager(object):
     def delete_schedule(self, switch, schedule_name):
         self._schedules[switch].pop(schedule_name)
         if schedule_name == self._states[switch].get('active_schedule'):
-            self._cancel_events()
             self._states[switch].pop('active_schedule')
         self.save_switch(switch)
         self._schedule_next_event()
 
     def use_schedule(self, switch, schedule_name):
         if schedule_name in self._schedules[switch]:
-            self._cancel_events()
             self._states[switch]['active_schedule'] = schedule_name
             current_level, _ = self._schedules[switch][schedule_name].get_current_action()
             self.set_level(switch, current_level or 0)
@@ -84,8 +82,8 @@ class SwitchManager(object):
         if mode == 0:
             self.use_schedule(switch, self._states[switch].get('active_schedule'))
         else:
-            self._cancel_events()
             self.set_level(switch, level)
+        self._schedule_next_event()
 
     def set_level(self, switch, level):
         self._states[switch]['level'] = level
@@ -107,7 +105,7 @@ class SwitchManager(object):
                        'schedules': self._schedules[switch_id]}
         switch_dict.update(self._states[switch_id])
         active_schedule = switch_dict.get('active_schedule')
-        if active_schedule:
+        if active_schedule and switch_dict['mode'] < 3:
             next_action = self._schedules[switch_id][active_schedule].get_next_action()
             if next_action:
                 level, date = next_action
