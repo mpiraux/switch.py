@@ -101,7 +101,9 @@ class Schedule(object):
                 # There is a gap between the current interval and the next one.
                 return None, interval.b.to_datetime()
 
-        return self._intervals[0].weight, self._intervals[0].a.to_datetime() + timedelta(weeks=1)
+        if self.get_current_action()[0] is None:
+            return self._intervals[0].weight, self._intervals[0].a.to_datetime() + timedelta(weeks=1)
+        return None, self._intervals[-1].b.to_datetime()
 
     def __repr__(self):
         return '%s(intervals=%s)' % (self.__class__.__qualname__, repr(self._intervals))
